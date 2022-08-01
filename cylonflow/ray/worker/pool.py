@@ -6,7 +6,7 @@ from typing import Callable, Any, Optional, List, Dict
 
 import ray
 
-from cylonflow.ray.worker.actor import CylonRayFileStoreActor
+from cylonflow.api.actor import CylonGlooFileStoreActor
 from cylonflow.ray.worker.config import GlooFileStoreConfig
 
 logger = logging.getLogger(__name__)
@@ -173,7 +173,7 @@ class CylonRayFileStoreWorkerPool(CylonRayWorkerPool):
         super().__init__(num_workers, pg_strategy, pg_timeout)
         self.gloo_file_store_path = config.file_store_path
 
-        self.actor_cls = CylonRayFileStoreActor
+        self.actor_cls = CylonGlooFileStoreActor
         self.actor_kwargs = {
             'file_store_path': config.file_store_path,
             'store_prefix': config.store_prefix or str(ray.get_runtime_context().job_id)
