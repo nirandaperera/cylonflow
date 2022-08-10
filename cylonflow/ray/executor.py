@@ -193,8 +193,8 @@ class CylonRayExecutor:
     Driver class
     """
 
-    def __init__(self, num_workers, config, pg_strategy='STRICT_SPREAD', pg_timeout=100):
-        self.num_workers = num_workers
+    def __init__(self, parallelism, config, pg_strategy='SPREAD', pg_timeout=100):
+        self.parallelism = parallelism
         self.config = config
         self.pg_strategy = pg_strategy
         self.pg_timeout = pg_timeout
@@ -210,7 +210,7 @@ class CylonRayExecutor:
               executable_cls: type = None,
               executable_args: Optional[List] = None,
               executable_kwargs: Optional[Dict] = None):
-        self.remote_worker_pool = ray.remote(self.worker_pool_cls).remote(self.num_workers,
+        self.remote_worker_pool = ray.remote(self.worker_pool_cls).remote(self.parallelism,
                                                                           pg_strategy=self.pg_strategy,
                                                                           pg_timeout=self.pg_timeout,
                                                                           config=self.config)

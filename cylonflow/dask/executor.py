@@ -124,4 +124,5 @@ class CylonDaskExecutor:
         return self.worker_pool.execute_cylon(fn=fn)
 
     def shutdown(self):
-        return self.worker_pool.shutdown()
+        self.client.shutdown()
+        self.worker_pool.shutdown()
