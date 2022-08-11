@@ -6,7 +6,7 @@ dependencies:
   - python=3.8
   - cmake>=3.17
   - parsl>=1.2.0
-  - ray>=1.13.0
+  - ray-all>=1.12.1
   - dask>=2022.8.0
 # for pycylon
   - pyarrow=5.0.0

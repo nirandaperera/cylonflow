@@ -1,5 +1,6 @@
 import os
 import shutil
+import time 
 from typing import Callable, Any, List, Optional, Dict
 
 from distributed import Client, Actor, wait
@@ -19,15 +20,23 @@ class DaskWorkerPool(WorkerPool):
     actor_cls = None
     actor_args = None
 
+    def _wait_for_resources(self):
+        print(f'Waiting for resources')
+        while(len(self.client.ncores()) < self.parallelism):
+            time.sleep(1)
+
     def __init__(self, client: Client, parallelism: int) -> None:
         self.client = client
         self.parallelism = parallelism
 
         ncores = client.ncores()
         if len(ncores) < parallelism:
-            raise RuntimeError(f'dask cluster doesnt have enough resources: {len(ncores)}<{parallelism}')
+            print(f'WARN: dask cluster doesnt have enough resources: {len(ncores)}<{parallelism}')
+            self._wait_for_resources()
+            ncores = client.ncores()
 
         self.worker_addresses = list(ncores.keys())[0:parallelism]
+        print(f'resources available. {self.client}')
 
     def _run_cylon_remote(self,
                           fn: Callable[[Any], Any]) -> List[Any]:
