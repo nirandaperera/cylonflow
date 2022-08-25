@@ -222,19 +222,19 @@ class CylonRayExecutor:
                   fn: Callable[[Any], Any],
                   args: Optional[List] = None,
                   kwargs: Optional[Dict] = None) -> List[Any]:
-        return self.remote_worker_pool.run_cylon.remote(fn=fn, args=args, kwargs=kwargs)
+        return ray.get(self.remote_worker_pool.run_cylon.remote(fn=fn, args=args, kwargs=kwargs))
 
     def run(self,
             fn: Callable[[Any], Any],
             args: Optional[List] = None,
             kwargs: Optional[Dict] = None) -> List[Any]:
-        return self.remote_worker_pool.run.remote(fn=fn, args=args, kwargs=kwargs)
+        return ray.get(self.remote_worker_pool.run.remote(fn=fn, args=args, kwargs=kwargs))
 
     def execute(self, fn: Callable[["executable_cls"], Any]) -> List[Any]:
-        return self.remote_worker_pool.execute.remote(fn=fn)
+        return ray.get(self.remote_worker_pool.execute.remote(fn=fn))
 
     def execute_cylon(self, fn: Callable[["executable_cls"], Any]) -> List[Any]:
-        return self.remote_worker_pool.execute_cylon.remote(fn=fn)
+        return ray.get(self.remote_worker_pool.execute_cylon.remote(fn=fn))
 
     def shutdown(self):
         if self.remote_worker_pool:

@@ -97,8 +97,10 @@ class DaskFileStoreWorkerPool(DaskWorkerPool):
 
         if not config.store_prefix:
             config.store_prefix = str(client.id)
-        self.actor_args = [config]
-
+        self.actor_args = [config]        
+        
+        if os.path.exists(config.file_store_path):
+            shutil.rmtree(config.file_store_path)
         os.makedirs(config.file_store_path, exist_ok=True)
 
     def shutdown(self):

@@ -8,3 +8,4 @@ class GlooFileStoreConfig:
     tcp_iface: str = None
     tcp_host_name: str = None
     tcp_ai_family: int = None
+    timeout: int = None

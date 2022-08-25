@@ -1,3 +1,4 @@
+from cmath import log
 import logging
 from abc import ABC, abstractmethod
 
@@ -76,4 +77,8 @@ class CylonGlooFileStoreActor(CylonActor):
         if self.config.tcp_ai_family:
             comm_config.set_tcp_ai_family(self.config.tcp_ai_family)
 
+        if self.config.timeout:
+            comm_config.set_timeout(self.config.timeout)
+
         self.cylon_env = CylonEnv(config=comm_config, distributed=self.world_size > 1)
+        self.cylon_env.barrier()
