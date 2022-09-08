@@ -258,3 +258,7 @@ class CylonEnvExecutor(CylonExecutor):
 
         self.launch_cmd = self.launch_cmd.replace("cylon_worker_pool.py",
                                                   "cylon_env_worker_pool.py")
+
+    def shutdown(self, hub=True, targets='all', block=False):
+        self.provider.cancel(list(self.blocks.values()))
+        super(CylonEnvExecutor, self).shutdown(hub, targets, block)

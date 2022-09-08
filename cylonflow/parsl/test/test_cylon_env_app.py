@@ -28,14 +28,16 @@ config = Config(
 parsl.load(config=config)
 
 
-@cylon_env_app
+@cylon_env_app(executors=['cylon_test'])
 def foo(x_, cylon_env=None, logger=None):
     from pycylon import Scalar
     import pyarrow as pa
+    import time
 
     rank = cylon_env.rank
     sz = cylon_env.world_size
     logger.info(f"Starting rank: {rank} world_size: {sz}")
+    time.sleep(3)
     return Scalar(pa.scalar(rank + x_))
 
 
