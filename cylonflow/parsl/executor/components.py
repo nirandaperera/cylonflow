@@ -83,18 +83,18 @@ class CylonManager(object):
         self.result_outgoing.setsockopt(zmq.LINGER, 0)
         self.result_outgoing.connect(result_q_url)
 
-        self.task_bcasting = self.context.socket(zmq.PUB)
-        # self.task_bcasting.setsockopt(zmq.IDENTITY, uid.encode('utf-8'))DEFAULT_LOGGER
-        self.task_bcasting.setsockopt(zmq.LINGER, 0)
-        self.task_bcasting_port = \
-            self.task_bcasting.bind_to_random_port(f"tcp://{address}",
-                                                   min_port=task_bcast_port_range[0],
-                                                   max_port=task_bcast_port_range[1])
-        self.task_bcasting_url = f"tcp://{address}:{self.task_bcasting_port}"
-        self.worker_topic = worker_topic
+        # self.task_bcasting = self.context.socket(zmq.PUB)
+        # # self.task_bcasting.setsockopt(zmq.IDENTITY, uid.encode('utf-8'))DEFAULT_LOGGER
+        # self.task_bcasting.setsockopt(zmq.LINGER, 0)
+        # self.task_bcasting_port = \
+        #     self.task_bcasting.bind_to_random_port(f"tcp://{address}",
+        #                                            min_port=task_bcast_port_range[0],
+        #                                            max_port=task_bcast_port_range[1])
+        # self.task_bcasting_url = f"tcp://{address}:{self.task_bcasting_port}"
+        # self.worker_topic = worker_topic
         # self.task_bcasting.connect(self.task_bcasting_url)
 
-        logger.info(f"Manager connected (task bcast url {self.task_bcasting_url})")
+        # logger.info(f"Manager connected (task bcast url {self.task_bcasting_url})")
         self.max_queue_size = max_queue_size + comm.size
 
         # Creating larger queues to avoid queues blocking
@@ -261,10 +261,10 @@ class CylonManager(object):
         """
         Start the Manager process.
         """
-        logger.debug("Manager broadcasting its task bcast address")
-        self.comm.bcast(self.task_bcasting_url, root=0)
+        # logger.debug("Manager broadcasting its task bcast address")
+        # self.comm.bcast(self.task_bcasting_url, root=0)
 
-        self.comm.Barrier()
+        self.comm.barrier()
         logger.debug("Manager synced with workers")
         self.workers_ready = True
 
@@ -299,9 +299,10 @@ class CylonManager(object):
                 tid = task['task_id']
                 try:
                     logger.debug(f"Broadcasting task to workers: {task}")
-                    self.task_bcasting.send_multipart([self.worker_topic.encode('utf8'),
-                                                       pickle.dumps(task)])
-                    self.comm.barrier()
+                    # self.task_bcasting.send_multipart([self.worker_topic.encode('utf8'),
+                    #                                    pickle.dumps(task)])
+                    # self.comm.barrier()
+                    self.comm.bcast(pickle.dumps(task), root=0)
 
                     # wait for all results
                     results = self.comm.gather(None, root=0)
@@ -355,34 +356,35 @@ class CylonWorker:
     def start(self):
         logger.info(f"Worker started rank: {self.comm.rank} local_rank: {self.local_comm.rank}")
 
-        master_bcast_url = self.comm.bcast(None, root=0)
-        logger.debug(f"Received master bcast url {master_bcast_url}")
-
-        zmq_context = zmq.Context()
-        task_bcasting = zmq_context.socket(zmq.SUB)
-        task_bcasting.setsockopt(zmq.LINGER, 0)
-        task_bcasting.setsockopt_string(zmq.SUBSCRIBE, self.worker_topic)
-        task_bcasting.connect(master_bcast_url)
-
-        poller = zmq.Poller()
-        poller.register(task_bcasting, zmq.POLLIN)
+        # master_bcast_url = self.comm.bcast(None, root=0)
+        # logger.debug(f"Received master bcast url {master_bcast_url}")
+        #
+        # zmq_context = zmq.Context()
+        # task_bcasting = zmq_context.socket(zmq.SUB)
+        # task_bcasting.setsockopt(zmq.LINGER, 0)
+        # task_bcasting.setsockopt_string(zmq.SUBSCRIBE, self.worker_topic)
+        # task_bcasting.connect(master_bcast_url)
+        #
+        # poller = zmq.Poller()
+        # poller.register(task_bcasting, zmq.POLLIN)
 
         # Sync worker with master
-        self.comm.Barrier()
-        logger.debug("Synced")
+        self.comm.barrier()
+        logger.debug("Synced with manager")
 
         while True:
-            socks = dict(poller.poll())
-            if task_bcasting in socks and socks[task_bcasting] == zmq.POLLIN:
-                logger.debug("received task bcast")
-                _, pkl_msg = task_bcasting.recv_multipart()
-                req = pickle.loads(pkl_msg)
-            else:
-                logger.debug("Unrelated task received from master. Retrying...")
-                continue
-
+            # socks = dict(poller.poll())
+            # if task_bcasting in socks and socks[task_bcasting] == zmq.POLLIN:
+            #     logger.debug("received task bcast")
+            #     _, pkl_msg = task_bcasting.recv_multipart()
+            #     req = pickle.loads(pkl_msg)
+            # else:
+            #     logger.debug("Unrelated task received from master. Retrying...")
+            #     continue
+            bcast_req = self.comm.bcast(None, root=0)
+            req = pickle.loads(bcast_req)
             logger.info("Got req: {}".format(req))
-            self.comm.barrier()
+            # self.comm.barrier()
 
             try:
                 result = self.execute_task(req['buffer'])
