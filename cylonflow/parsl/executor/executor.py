@@ -3,6 +3,7 @@
 
 import logging
 import os
+import sys
 
 try:
     import mpi4py
@@ -185,7 +186,7 @@ CYLON_EOF
 
         if not launch_cmd:
             self.launch_cmd = ("mpiexec " + f"{self.hostfile} {self.mpi_params}" +
-                               " -np {ranks_per_node} {script_path}/cylon_worker_pool.py "
+                               " -np {ranks_per_node} {python_exec} {script_path}/cylon_worker_pool.py "
                                "{debug} "
                                "--task_url={task_url} "
                                "--result_url={result_url} "
@@ -206,7 +207,8 @@ CYLON_EOF
 
     def initialize_scaling(self):
         debug_opts = "--debug" if self.worker_debug else ""
-        l_cmd = self.launch_cmd.format(debug=debug_opts,
+        l_cmd = self.launch_cmd.format(python_exec=sys.executable,
+                                       debug=debug_opts,
                                        task_url="tcp://{}:{}".format(self.address,
                                                                      self.worker_task_port),
                                        result_url="tcp://{}:{}".format(self.address,
@@ -255,6 +257,7 @@ class CylonEnvExecutor(CylonExecutor):
                          worker_port_range, interchange_port_range, storage_access, working_dir,
                          worker_debug, ranks_per_node, heartbeat_threshold, heartbeat_period,
                          managed)
+
 
         self.launch_cmd = self.launch_cmd.replace("cylon_worker_pool.py",
                                                   "cylon_env_worker_pool.py")
